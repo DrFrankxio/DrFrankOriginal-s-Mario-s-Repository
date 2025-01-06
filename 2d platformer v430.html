@@ -1,0 +1,737 @@
+<script src="stats.js"></script>
+<script src="three.js"></script>
+<script src="perlin.js"></script>
+<canvas id="c"width="400"height="256"style="position:absolute;right:0px;top:0px"></canvas>
+<script>
+melonSliceCount=0
+melonSlice1=[]
+
+scene=new THREE.Scene()
+scene.background=new THREE.Color("rgb(0,127,255)")
+
+loader=new THREE.TextureLoader()
+texture1=loader.load("dirt_greeded.png")
+mesh1Material=new THREE.MeshBasicMaterial({map:texture1})
+
+var stats = new Stats();
+stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
+document.body.appendChild( stats.dom );
+
+function animate() {
+
+	stats.begin();
+
+	// monitored code goes here
+
+	stats.end();
+
+	requestAnimationFrame( animate );
+
+}
+
+requestAnimationFrame( animate );
+
+seed=Math.floor(Math.random()*10**10)
+
+prevX=0
+let blocks = [];
+let catchedCoins = [];
+let destroyedMelons = [];
+
+check_catched_coin=(x,y,z)=>{
+	checked=false
+	for(coin1 of catchedCoins){
+		if(distance(coin1,{x:x,y:y,z:z})<2){
+			checked=true
+		}
+	}
+	return checked
+}
+
+check_destroyed_melons=(x,y,z)=>{
+	checked=false
+	for(melon1 of destroyedMelons){
+		if(distance(melon1,{x:x,y:y,z:z})<2){
+			checked=true
+		}
+	}
+	return checked
+}
+
+init2=() => {
+	// Eliminar bloques existentes
+	for (let block1 of blocks) {
+	    if (block1.type !== "melon") {
+	        scene.remove(block1);
+	    } else {
+	        if (Math.abs(block1.position.x - cube.position.x) > 30 || block1.position.y<-10) {
+	            scene.remove(block1);
+	        }
+	    }
+	}
+
+    //blocks = []; // Reinicia el array
+
+    // Crear nuevos bloques
+    posXB=Math.floor(cube.position.x)
+	mesh3=new THREE.Mesh(new THREE.BoxGeometry(32,9),blockMaterial2)
+	mesh3.position.set(posXB,-3,-2)
+	blocks.push(mesh3)
+	scene.add(mesh3)
+    for (let i = -35; i < 35; i++) {
+    	if(true){
+    		posX=Math.floor(cube.position.x+i)
+	    	if(noise.simplex2((posX)/5,seed)<0.5){
+		    	g(posX, -4, 0, blockMaterial1, false, false);
+		    	/*
+		    	for(j=-5;j>-8;j--){
+		    		g(posX, j, 0, blockMaterial2, false, false);
+		    	}
+		    	*/
+		    	//mesh1=new THREE.Mesh(new THREE.BoxGeometry(1,5,1),mesh1Material)
+		    	//mesh1.position.set(posX,-7,0)
+		    	//blocks.push(mesh1)
+		    	//scene.add(mesh1)
+
+		    	mesh2=new THREE.Mesh(new THREE.BoxGeometry(1,15),mesh1Material)
+		    	mesh2.position.set(posX,-6,-1)
+		    	blocks.push(mesh2)
+		    	scene.add(mesh2)
+		    	/*
+		    	for(j=1;j>-8;j--){
+		    		g(posX, j, -1, blockMaterial2, false, false)
+		    	}
+		    	*/
+		    	if(noise.simplex2((posX)/5,seed+1)<0.5){
+		    		gBush(posX, -3, 0.2, bushMaterial, false, false);
+		    	}
+		    	if(noise.simplex2((posX)/5,seed+2)<-0.25){
+		    		gTree(posX, -2, 0.1, treeMaterial, false, false);
+		    	}
+		    	if(noise.simplex2((posX)/5,seed+3)<-0.5&&Math.abs(i)>30){//&&(!check_catched_coin(posX,0,0))){
+		    		melon1=new THREE.Mesh(new THREE.BoxGeometry(0.8,0.8,0.8),melonMaterial1)
+		    		melon1.solid=true
+		    		melon1.type="melon"
+		    		melon1.breaked=false
+		    		melon1.Xspeed=0
+		    		melon1.Yspeed=0
+		    		melon1.Rspeed=0
+		    		melon1.Gravity=0
+		    		melon1.position.set(posX,0,0)
+		    		blocks.push(melon1)
+		    		scene.add(melon1)
+		    	}
+		    	if(!check_catched_coin(posX,2,0)){
+		    		gNotSolid(posX, 2, 0, purpleCoinMaterial, false, true)
+		    	}
+		    	if(!check_catched_coin(posX,1,0)){
+		    		gNotSolid(posX, 1, 0, purpleCoinMaterial, false, true)
+		    	}
+	    	}else{
+		    	for(j=1;j>-8;j--){
+		    		g(posX, j, -1, waterfallMaterial1, true, false)
+		    		//g(posX, j, -2, blockMaterial2, false, false)
+		    	}
+		    	/*
+		    	mesh3=new THREE.Mesh(new THREE.BoxGeometry(1,9,1),mesh1Material)
+		    	mesh3.position.set(posX,-3,-2)
+		    	blocks.push(mesh3)
+		    	scene.add(mesh3)
+		    	*/
+		    	if(!check_catched_coin(posX,2,0)){
+		    		gNotSolid(posX, 2, 0, purpleCoinMaterial, false, true)
+		    	}
+		    	if(!check_catched_coin(posX,1,0)){
+		    		gNotSolid(posX, 1, 0, purpleCoinMaterial, false, true)
+		    	}
+		    	if(!check_catched_coin(posX,0,0)){
+		    		gNotSolid(posX, 0, 0, purpleCoinMaterial, false, true)
+		    	}
+		    	if(!check_catched_coin(posX,-1,0)){
+		    		gNotSolid(posX, -1, 0, purpleCoinMaterial, false, true)
+		    	}
+	    	}
+    	}
+    }
+	for (let i = -1024; i < 1024; i++) {
+		posX=Math.floor(cube.position.x+i)
+        if (Math.abs((posX) % 4) < 1) {
+            gHillBackground((posX), 20 + noise.simplex2((posX)/40,seed+4)*40, noise.simplex2((posX)/40,seed+3)*-50-50-25);
+        }
+    }
+}
+
+imgPurpleCoin=new Image()
+imgPurpleCoin.src="purple coin 4.png"
+
+render2=()=>{
+	requestAnimationFrame(render2)
+	ctx.clearRect(0,0,c.width,c.height)
+
+	ctx.font='1000 64px mario';
+	ctx.fillStyle="rgba(255,255,255,1)"
+	ctx.fillText("x"+purpleCoins,64,64)
+	ctx.lineWidth=8
+	ctx.strokeStyle="rgba(0,0,0,1)"
+	ctx.strokeText("x"+purpleCoins,64,64)
+
+	ctx.drawImage(imgPurpleCoin,0,4,64,64)
+}
+
+ctx=c.getContext("2d")
+walkSpeed=0.2
+gravity=-0.01
+ySpeed=0
+jumpSpeed=0.3
+blocks=[]
+floored=false
+dir="left"
+time=0
+alive=true
+document.title="Click to play!"
+
+render=()=>{
+	time++
+
+	if(ySpeed<-0.2)
+		ySpeed=-0.2
+	
+	for(block1 of blocks){
+		if(block1.waterfall==true){
+			if(Math.abs((time/8)%3)==0){
+				block1.material=waterfallMaterial1
+			}else if(Math.floor(Math.abs((time/8)%3))==1){
+				block1.material=waterfallMaterial2
+			}else if(Math.floor(Math.abs((time/8)%3))==2){
+				block1.material=waterfallMaterial3
+			}
+		}
+	}
+
+	for(block1 of blocks){
+		if(block1.coin==true){
+			if(Math.abs((time/8)%4)==0){
+				block1.material=purpleCoinMaterial
+			}else if(Math.floor(Math.abs((time/8)%4))==1){
+				block1.material=purpleCoinMaterial2
+			}else if(Math.floor(Math.abs((time/8)%4))==2){
+				block1.material=purpleCoinMaterial3
+			}else if(Math.floor(Math.abs((time/8)%4))==3){
+				block1.material=purpleCoinMaterial4
+			}
+		}
+	}
+
+	renderer.setSize(innerWidth-1,innerHeight-1)
+	camera.aspect=innerWidth/innerHeight
+	camera.updateProjectionMatrix()
+	requestAnimationFrame(render)
+	renderer.render(scene,camera)
+
+	cube.position.y+=ySpeed
+	ySpeed+=gravity
+
+	if(localStorage.level==NaN||localStorage.level==null||localStorage.level==undefined){
+		localStorage.level=0
+	}
+
+	if(
+		check_coin({x:cube.position.x,y:cube.position.y,z:cube.position.z})
+		&&
+		(!check_melon({x:cube.position.x,y:cube.position.y,z:cube.position.z})
+	)){
+		delete_coin_at({x:cube.position.x,y:cube.position.y,z:cube.position.z})
+		purpleCoins++
+		localStorage.purpleCoins=purpleCoins
+		audio = new Audio('coin.mp3');
+		audio.play();
+		catchedCoins.push({x:Math.floor(cube.position.x),y:Math.floor(cube.position.y),z:Math.floor(cube.position.z)})
+	}
+
+	if(check_solid({x:cube.position.x,y:cube.position.y-0.2,z:cube.position.z})){
+		ySpeed=0.01
+		if(k[90]&&alive==true){
+			ySpeed=jumpSpeed
+			audio = new Audio('jump.mp3');
+			audio.play();
+		}
+	}
+
+	if(check_solid({x:cube.position.x,y:cube.position.y-0.5,z:cube.position.z})){
+		floored=true
+	}else{
+		floored=false
+	}
+
+	if(check_solid({x:cube.position.x,y:cube.position.y+0.2,z:cube.position.z})){
+		ySpeed=-0.1
+	}
+
+	for(i2 in blocks){
+		if(blocks[i2].type=="melon"&&distance(blocks[i2].position,cube.position)<1.5&&blocks[i2].breaked==false){
+			if(k[37]){
+				blocks[i2].Xspeed=(Math.random()*walkSpeed*-1)
+			}else if(k[39]){
+				blocks[i2].Xspeed=(Math.random()*walkSpeed*+1)
+			}else{
+				blocks[i2].Xspeed=0
+			}
+			for(i=0;i<100;i++){
+				gMelonSlice(
+					blocks[i2].position.x,blocks[i2].position.y,
+					Math.random()*0.4-0.2,Math.random()*0.4-0.2,
+					0,-0.01
+				)
+			}
+			/*
+			blocks[i2].Yspeed=ySpeed*2
+			blocks[i2].Rspeed=0.02-0.01//(Math.random()*0.1) /20
+			blocks[i2].Gravity=-0.01
+			blocks[i2].solid=false
+			blocks[i2].coin=false
+			blocks[i2].waterfall=false
+			scene.add(blocks[i2])
+			*/
+			blocks[i2].position.y=-100
+			new Audio('melon.wav').play();
+			//blocks.push(melonSlice1)
+			blocks[i2].breaked=true
+		}
+	}
+
+	//console.log(melonSliceCount)
+
+	for(i2 in blocks){
+		if(blocks[i2].type=="melon"&&blocks[i2].breaked==true){
+			blocks[i2].position.x+=blocks[i2].Xspeed
+			blocks[i2].position.y+=blocks[i2].Yspeed
+			blocks[i2].rotation.z+=blocks[i2].Rspeed
+			blocks[i2].Yspeed+=blocks[i2].Gravity
+		}
+	}
+
+	/*
+	if(check_melon({x:cube.position.x,y:cube.position.y,z:cube.position.z})){
+		for(i2 in blocks){
+			if(blocks[i2].type=="melon"){
+				for(i=0;i<10;i++){
+					blocks[i2].position.y=-100
+					melonSliceCount++
+					melonSlice1[melonSliceCount] = new THREE.Mesh(new THREE.PlaneGeometry(1,1),melonSliceMaterial)
+					melonSlice1[melonSliceCount].position.x=blocks[i2].position.x
+					melonSlice1[melonSliceCount].position.y=blocks[i2].position.y
+					melonSlice1[melonSliceCount].type="melon slice"
+					melonSlice1[melonSliceCount].Xspeed=Math.random()*4-2
+					melonSlice1[melonSliceCount].Yspeed=Math.random()*2
+					melonSlice1[melonSliceCount].Rspeed=Math.random()*8-4
+					scene.add(melonSlice1[melonSliceCount])
+					//blocks.push(melonSlice1)
+				}
+			}
+		}
+		//delete_melon_at({x:cube.position.x,y:cube.position.y,z:cube.position.z})
+		catchedCoins.push({x:Math.floor(cube.position.x),y:Math.floor(cube.position.y),z:Math.floor(cube.position.z)})
+	}
+	*/
+	
+	/*
+
+	i1=0
+	melonSlice1=[]
+	for(i0 in blocks){
+		if(blocks[i0].type=="melon"&&distance(blocks[i0].position,{x:cube.position.x,y:cube.position.y,z:cube.position.z})<2){
+			delete_coin_at({x:cube.position.x,y:cube.position.y,z:cube.position.z})
+			for(i=0;i<10;i++){
+				i1++
+				melonSlice1[i1] = new THREE.Mesh(new THREE.PlaneGeometry(1,1),melonSliceMaterial)
+				melonSlice1[i1].position=cube.position
+				melonSlice1[i1].Xspeed=Math.random()*4-2
+				melonSlice1[i1].Yspeed=Math.random()*2
+				melonSlice1[i1].Rspeed=Math.random()*8-4
+				melonSlice1[i1].type="melon slice"
+				blocks[i0].solid=false
+				scene.add(melonSlice1[i1])
+				//blocks.push(melonSlice1)
+			}
+			catchedCoins.push(blocks[i0])
+		}
+	}
+
+
+	if(check_melon({x:cube.position.x,y:cube.position.y,z:cube.position.z})){
+		delete_coin_at({x:cube.position.x,y:cube.position.y,z:cube.position.z})
+		console.log("checked")
+		for(i=0;i<10;i++){
+			console.log("sparcing")
+			let melonSlice1 = new THREE.Mesh(new THREE.PlaneGeometry(1,1),melonSliceMaterial)
+			melonSlice1.position=cube.position
+			melonSlice1.Xspeed=Math.random()*4-2
+			melonSlice1.Yspeed=Math.random()*2
+			melonSlice1.Rspeed=Math.random()*2-1
+			melonSlice1.type="melon slice"
+			melonSlice1.solid=false
+			scene.add(melonSlice1)
+			//catchedCoins.push(block1)
+		}
+		catchedCoins.push({x:Math.floor(cube.position.x),y:Math.floor(cube.position.y),z:Math.floor(cube.position.z)})
+	}
+
+	*/
+	
+
+	if(k[37]&&alive==true&&(!check_solid({x:cube.position.x-walkSpeed*2,y:cube.position.y+0.1,z:cube.position.z}))){
+		cube.position.x-=walkSpeed
+		dir="left"
+	}
+	if(k[39]&&alive==true&&(!check_solid({x:cube.position.x+walkSpeed*2,y:cube.position.y+0.1,z:cube.position.z}))){
+		cube.position.x+=walkSpeed
+		dir="right"
+	}
+
+	if(alive==true){
+		camera.position.x=cube.position.x
+		camera.position.y=-1
+	}
+	if(floored==true){
+		if(dir=="right"){
+			if(Math.abs((cube.position.x*8)%2)<1){
+				cube.material=marioMaterial1
+			}else{
+				cube.material=marioMaterial2
+			}
+		}else{
+			if(Math.abs((cube.position.x*8)%2)<1){
+				cube.material=marioMaterial3
+			}else{
+				cube.material=marioMaterial4
+			}
+		}
+	}else{
+		if(dir=="right"){
+			cube.material=marioMaterial5
+		}else{
+			cube.material=marioMaterial6
+		}
+	}
+	deathed=false
+	if(cube.position.y<-10){
+		deathed=true
+		if(deathed==true){
+			setTimeout(()=>{
+				cube.position.y=5
+				purpleCoins=Math.floor(purpleCoins/100)*100
+			},1000)
+			deathAudio.play();
+			deathAudio.addEventListener('ended', function() { audio.pause(); });
+		}
+	}
+	console.log(melonSlices.length)
+	//gMelonSlice(pos,mov,rot,grav)
+	for(melonSlice1 of melonSlices){
+		if(melonSlice1.position.y<-10||Math.abs(melonSlice1.position.x-camera.position.x)>30){
+			scene.remove(melonSlice1[i])
+		}
+		melonSlice1.position.x+=melonSlice1.Xspeed
+		melonSlice1.position.y+=melonSlice1.Yspeed
+		melonSlice1.Yspeed+=melonSlice1.grav
+		melonSlice1.rotation.z+=1
+		//melonSlices.rotation.z+=melonSlices.rot
+	}
+}
+
+g=(x,y,z,material,waterfall,coin)=>{
+	if(waterfall==true){
+		block1=new THREE.Mesh(new THREE.PlaneGeometry(1,1),material)
+		block1.position.set(x,y,z+0.25)
+		block1.solid=false
+	}else{
+		block1=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),material)
+		block1.solid=true
+		block1.position.set(x,y,z)
+	}
+	scene.add(block1)
+	block1.waterfall=waterfall
+	block1.coin=coin
+	blocks.push(block1)
+}
+gNotSolid=(x,y,z,material,waterfall,coin)=>{
+	block1=new THREE.Mesh(new THREE.PlaneGeometry(1,1),material)
+	scene.add(block1)
+	block1.solid=false
+	block1.waterfall=waterfall
+	block1.coin=coin
+	block1.position.set(x,y,z)
+	blocks.push(block1)
+}
+melonSlices=[]
+gMelonSlice=(x,y,Xspeed,Yspeed,rot,grav)=>{
+	block1=new THREE.Mesh(new THREE.PlaneGeometry(1,1),melonSliceMaterial)
+	scene.add(block1)
+	block1.solid=false
+	block1.waterfall=false
+	block1.coin=false
+	block1.position.x=x
+	block1.position.y=y
+	block1.Xspeed=Xspeed
+	block1.Yspeed=Yspeed
+	block1.rot=rot
+	block1.grav=grav
+	melonSlices.push(block1)
+}
+gPipe=(x,y,z)=>{
+	for(j=y;j>-200;j--){
+		if(j==y){
+			block1=new THREE.Mesh(new THREE.PlaneGeometry(2,2),pipeMaterial1)
+			scene.add(block1)
+			block1.solid=true
+			block1.waterfall=false
+			block1.coin=false
+			block1.type="pipeTop"
+			block1.position.set(x,j,z)
+			blocks.push(block1)
+		}else{
+			block1=new THREE.Mesh(new THREE.PlaneGeometry(2,2),pipeMaterial2)
+			scene.add(block1)
+			block1.solid=true
+			block1.waterfall=false
+			block1.coin=false
+			block1.type="pipeCenter"
+			block1.position.set(x,j,z)
+			blocks.push(block1)
+		}
+	}
+}
+distance=(obj1,obj2)=>{
+	return (((obj1.x-obj2.x)**2+(obj1.y-obj2.y)**2+(obj1.z-obj2.z)**2)**0.5)
+}
+check_solid=(pos1)=>{
+	checked=false
+	for(block1 of blocks){
+		if(distance(pos1,block1.position)<1&&block1.solid==true){
+			checked=true
+		}
+	}
+	return checked
+}
+check_coin=(pos1)=>{
+	checked=false
+	for(block1 of blocks){
+		if(distance(pos1,block1.position)<1&&block1.coin==true){
+			checked=true
+		}
+	}
+	return checked
+}
+check_melon=(pos1)=>{
+	checked=false
+	for(block1 of blocks){
+		if(distance(pos1,block1.position)<2&&block1.type=="melon"){
+			checked=true
+		}
+	}
+	return checked
+}
+delete_coin_at=(pos1)=>{
+	for(block1 of blocks){
+		if(distance(pos1,block1.position)<1&&(block1.coin==true||block1.type=="melon")){
+			block1.position.y=-100
+		}
+	}
+}
+delete_melon_at=(pos1)=>{
+	for(block1 of blocks){
+		if(distance(pos1,block1.position)<2&&(block1.coin==true||block1.type=="melon")){
+			block1.position.y=-100
+		}
+	}
+}
+check_pipe=(pos1)=>{
+	checked=false
+	for(block1 of blocks){
+		if(distance(pos1,block1.position)<2&&block1.type=="pipeTop"){
+			checked=true
+		}
+	}
+	return checked
+}
+check_pipe_side=(pos1)=>{
+	checked=false
+	for(block1 of blocks){
+		if(distance(pos1,block1.position)<2&&block1.type=="pipeCenter"){
+			checked=true
+		}
+	}
+	return checked
+}
+clicked=false
+onclick=()=>{
+	if(clicked==false){
+		music_overworld = new Audio('overworld.mp3');
+		music_overworld.loop=true
+		music_overworld.play()
+		if(localStorage.purpleCoins==NaN||localStorage.purpleCoins==null||localStorage.purpleCoins==undefined){
+			localStorage.purpleCoins=0
+		}else{
+			try{
+				purpleCoins=localStorage.purpleCoins
+			}catch(e){
+				localStorage.purpleCoins=0
+			}
+		}
+
+		init()
+		prevX1=0
+		setInterval(()=>{
+			if(Math.abs(prevX1-camera.position.x)>5){
+				prevX1=camera.position.x
+				init2()
+			}
+		},1000/60)
+		init2()
+
+		clicked=true
+	}
+}
+
+init=()=>{
+	requestAnimationFrame(render2)
+
+	deathAudio = new Audio('death.mp3.wav');
+	deathAudio.loop=false
+
+	k=[]
+	onkeydown=onkeyup=(e)=>{k[e.keyCode]=e.type=="keydown"}
+
+	document.title="Three.js 2d platformer."
+
+	camera=new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,1,10000)
+
+	renderer=new THREE.WebGLRenderer()
+	document.body.appendChild(renderer.domElement);
+
+	loader=new THREE.TextureLoader()
+
+	marioMaterial1=new THREE.MeshBasicMaterial({map:loader.load("mario right 1.png"),transparent:true})
+	marioMaterial2=new THREE.MeshBasicMaterial({map:loader.load("mario right 2.png"),transparent:true})
+	marioMaterial3=new THREE.MeshBasicMaterial({map:loader.load("mario left 1.png"),transparent:true})
+	marioMaterial4=new THREE.MeshBasicMaterial({map:loader.load("mario left 2.png"),transparent:true})
+	marioMaterial5=new THREE.MeshBasicMaterial({map:loader.load("mario jump right.png"),transparent:true})
+	marioMaterial6=new THREE.MeshBasicMaterial({map:loader.load("mario jump left.png"),transparent:true})
+
+	blockMaterialTop2=new THREE.MeshBasicMaterial({map:loader.load("grass2.png"),transparent:true})
+
+	blockMaterialTop=new THREE.MeshBasicMaterial({map:loader.load("grass.png"),transparent:true})
+	blockMaterialSide=new THREE.MeshBasicMaterial({map:loader.load("grass_dirt.png"),transparent:true})
+	blockMaterialBottom=new THREE.MeshBasicMaterial({map:loader.load("dirt.png"),transparent:true})
+
+	brownBlockMaterialBottom=new THREE.MeshBasicMaterial({map:loader.load("block.png"),transparent:true})
+
+	waterfallMaterial1=new THREE.MeshBasicMaterial({map:loader.load("waterfall-1.png"),transparent:true,opacity:0.5})
+	waterfallMaterial2=new THREE.MeshBasicMaterial({map:loader.load("waterfall-2.png"),transparent:true,opacity:0.5})
+	waterfallMaterial3=new THREE.MeshBasicMaterial({map:loader.load("waterfall-3.png"),transparent:true,opacity:0.5})
+
+	purpleCoinMaterial=new THREE.MeshBasicMaterial({map:loader.load("purple coin.png"),transparent:true})
+	purpleCoinMaterial2=new THREE.MeshBasicMaterial({map:loader.load("purple coin 2.png"),transparent:true})
+	purpleCoinMaterial3=new THREE.MeshBasicMaterial({map:loader.load("purple coin 3.png"),transparent:true})
+	purpleCoinMaterial4=new THREE.MeshBasicMaterial({map:loader.load("purple coin 4.png"),transparent:true})
+
+	pipeMaterial1=new THREE.MeshBasicMaterial({map:loader.load("pipe top.png"),transparent:true})
+	pipeMaterial2=new THREE.MeshBasicMaterial({map:loader.load("pipe center.png"),transparent:true})
+	pipeMaterial3=new THREE.MeshBasicMaterial({map:loader.load("pipe bottom.png"),transparent:true})
+
+	melonMaterialTop=new THREE.MeshBasicMaterial({map:loader.load("melon up.png"),transparent:true})
+	melonMaterialSide=new THREE.MeshBasicMaterial({map:loader.load("melon side.png"),transparent:true})
+
+	bushMaterial=new THREE.MeshBasicMaterial({map:loader.load("bush.png"),transparent:true})
+	
+	treeMaterial=new THREE.MeshBasicMaterial({map:loader.load("tree.png"),transparent:true})
+
+	bgHillMaterialTop=new THREE.MeshBasicMaterial({map:loader.load("hill.png"),transparent:true})
+
+	melonSliceMaterial=new THREE.MeshBasicMaterial({map:loader.load("melon_slice.png"),transparent:true})
+
+	blockMaterial1=[
+		blockMaterialSide,
+		blockMaterialSide,
+		blockMaterialTop,
+		blockMaterialBottom,
+		blockMaterialSide,
+		blockMaterialSide,
+	]
+	blockMaterial2=[
+		blockMaterialBottom,
+		blockMaterialBottom,
+		blockMaterialBottom,
+		blockMaterialBottom,
+		blockMaterialBottom,
+		blockMaterialBottom,
+	]
+	brownBlockMaterial1=[
+		brownBlockMaterialBottom,
+		brownBlockMaterialBottom,
+		brownBlockMaterialBottom,
+		brownBlockMaterialBottom,
+		brownBlockMaterialBottom,
+		brownBlockMaterialBottom,
+	]
+
+	melonMaterial1=[
+		melonMaterialSide,
+		melonMaterialSide,
+		melonMaterialTop,
+		melonMaterialTop,
+		melonMaterialSide,
+		melonMaterialSide,
+	]
+	
+	gHillBackground=(x,y,z)=>{
+		const geometry = new THREE.PlaneGeometry( 100, 300)
+		const block1 = new THREE.Mesh( geometry, bgHillMaterialTop );
+		block1.solid=true
+		block1.waterfall=false
+		block1.coin=false
+		block1.position.set(x,y,z)
+		scene.add( block1 );
+		blocks.push(block1)
+	}
+
+	gBush=(x,y,z)=>{
+		const geometry = new THREE.PlaneGeometry(2,1)
+		const block1 = new THREE.Mesh( geometry, bushMaterial );
+		block1.solid=false
+		block1.waterfall=false
+		block1.coin=false
+		block1.position.set(x,y,z)
+		scene.add( block1 );
+		blocks.push(block1)
+	}
+
+	gTree=(x,y,z)=>{
+		const geometry = new THREE.PlaneGeometry(1,3)
+		const block1 = new THREE.Mesh( geometry, treeMaterial );
+		block1.solid=false
+		block1.waterfall=false
+		block1.coin=false
+		block1.position.set(x,y,z)
+		scene.add( block1 );
+		blocks.push(block1)
+	}
+
+	cube=new THREE.Mesh(new THREE.PlaneGeometry(1,1),marioMaterial1)
+	scene.add(cube)
+	cube.position.set(0,5,0)
+
+	camera.position.z=5
+	render()
+}
+</script>
+<style>
+	body{
+		margin:0px;
+		background-color:rgb(0,127,255);
+	}
+	@font-face{
+		src:url("mario.ttf");
+		font-family:mario;
+	}
+</style>
